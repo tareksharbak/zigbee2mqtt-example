@@ -1,0 +1,39 @@
+version: '3.3'
+
+services:
+  mqtt:
+    container_name: mqtt
+    image: eclipse-mosquitto:2.0.10
+    restart: unless-stopped
+    volumes:
+      - "../data/mosquitto:/mosquitto"
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    command: "mosquitto -c /mosquitto-no-auth.conf"
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    restart: unless-stopped
+    image: koenkk/zigbee2mqtt:1.27.0
+    volumes:
+      - ./data/zigbee2mqtt:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+      - 8080:8080
+    environment:
+      - TZ=Europe/Brussels
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    depends_on:
+      - mqtt
+
+  influxdb:
+    container_name: influxdb
+    image: influxdb:2.4.0
+    ports:
+      - '8086:8086'
+    volumes:
+      - ./data/influxdb:/var/lib/influxdb2
+    environment:
+        - INFLUXD_SESSION_LENGTH=43800
